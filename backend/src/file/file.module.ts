@@ -1,10 +1,14 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MulterModule } from '@nestjs/platform-express';
 import { FileController } from './file.controller';
-import { FileService } from './file.service';
+import { FilledPDF } from './file.entity';
 
 @Module({
-    
+  imports: [
+    TypeOrmModule.forFeature([FilledPDF]),
+    MulterModule.register(),
+  ],
   controllers: [FileController],
-  providers: [FileService],
 })
-export class ApiModule {}
+export class FileModule {}

@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ApiModule } from './file/file.module';
+import { FileModule } from './file/file.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
@@ -12,9 +12,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     username: 'postgres',
     password: 'sus17251',
     database: 'PDF_Editor',
-    entities: [],
+    entities: [__dirname + '/**/*.entity{.ts,.js}'],
     synchronize: true,
-  }),ApiModule],
+  }),FileModule],
   controllers: [AppController],
   providers: [AppService],
 })
