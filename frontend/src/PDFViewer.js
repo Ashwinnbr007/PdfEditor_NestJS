@@ -1,46 +1,44 @@
 import React, { useState } from 'react';
-import { PDFDocument } from 'pdf-lib';
+import { Document, Page } from 'react-pdf';
 
 const PDFViewer = () => {
   const domain = process.env.REACT_APP_API_URL;
-  const url = `${domain}/example.pdf`;
-  const [pdfBytes, setPdfBytes] = useState(null);
+  const url = `${domain}/_example.pdf`;
+  let blob = null
+  const [pdfBlob, setPdfBlob] = useState(null);
   const [pdfView, setPdfView] = useState(null);
 
 
   const loadPDF = async () => {
     const response = await fetch(url);
-
-    const clonedResponse = response.clone();
-    const blob = await response.blob();
+    blob = await response.blob();
+    setPdfBlob(blob);
     setPdfView(URL.createObjectURL(blob));
-
-    const arrayBuffer = await clonedResponse.arrayBuffer();
-    setPdfBytes(arrayBuffer);
   };
 
   const savePDF = async () => {
-    if (!pdfBytes) {
+    if (!pdfBlob) {
       console.error('No PDF data available');
       return;
     }
+    const _blob = pdfBlob;
+    const arrayBuffer = await _blob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
 
+    //Saving the pdf as uint8Array
     try {
-      const existingPDF = await PDFDocument.load(pdfBytes);
-      // Modify the existing PDF document as needed using pdf-lib
-
-      // Save the modified PDF as a new ArrayBuffer
-      const modifiedPDFBytes = await existingPDF.save();
-
-      console.log(modifiedPDFBytes)
-      // Send the modified PDF data to the server for saving
-      await fetch(url, {
-        method: 'PUT',
-        headers: { 'Content-type':'application/pdf'},
-        body: modifiedPDFBytes,
-      });
-
-      console.log('PDF saved successfully');
+        const response = await fetch(url, {
+          method: 'PUT',
+          body: JSON.stringify({ pdfData: Array.from(uint8Array) }), // Send the Uint8Array as an array
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      if (response.ok) {
+        console.log('PDF saved successfully');
+      } else {
+        console.error('Failed to save PDF');
+      }
     } catch (error) {
       console.error('Error saving PDF:', error);
     }
@@ -51,8 +49,9 @@ const PDFViewer = () => {
       <button onClick={loadPDF}>Load PDF</button>
       <button onClick={savePDF}>Save PDF</button>
       <div>
-        {pdfBytes && (
+        {pdfView && (
           <embed
+            id='pdf'
             src={pdfView}
             type="application/pdf"
             width="100%"

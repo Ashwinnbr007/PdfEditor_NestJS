@@ -9,7 +9,7 @@ export class FilledPDF {
   filename: string;
 
   @Column('bytea')
-  pdfData: Buffer;
+  pdfData: number[];
 
   @Column()
   link: string;

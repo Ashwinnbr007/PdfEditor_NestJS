@@ -6,6 +6,8 @@ import { FilledPDF } from './file.entity';
 import { Response } from 'express';
 import * as fs from 'fs';
 import { writeFile } from 'fs/promises';
+import { extname } from 'path';
+import { diskStorage } from 'multer';
 import { PDFDocument } from 'pdf-lib';
 import * as path from 'path';
 
@@ -19,9 +21,7 @@ export class FileController {
 
   @Get(':filename')
   async getFile(@Param('filename') filename: string, @Res() res: Response) {
-    const filledPDF = await this.filledPDFRepository.findOne(
-      { where: { filename }, order: { id: 'DESC' } },
-    );
+
     const filePath = path.join(__dirname, '../..', 'files', filename);
     if (!fs.existsSync(filePath)) {
       return res.status(404).send('File not found');
@@ -34,46 +34,27 @@ export class FileController {
 
   @Put(':filename')
   @UseInterceptors(FileInterceptor('pdf'))
-  async saveFile(@Body() newPdfData: ArrayBuffer, @Res() res : Response) {
-
+  async saveFile(@Body() requestBody: { pdfData: number[] }) {
+    const uint8Array = new Uint8Array(requestBody.pdfData); // Convert array back to Uint8Array
     try {
-      const filePath = 'files/example.pdf'; // Provide the correct file path
-      const existingPDF = await PDFDocument.load(filePath);
+      const filePath = `files/_example.pdf`; // Provide the correct file path
 
-      console.log(existingPDF)
+      await writeFile(filePath, uint8Array); // Save the Uint8Array to the file path
 
-      // Create a new PDF document from the received PDF data
-      const updatedPDF = await PDFDocument.load(newPdfData);
+      const pdfData = requestBody.pdfData;
 
-      // // Clear the existing content in the original PDF
-      // existingPDF.removePage(existingPDF.getPageCount() - 1);
+      const link = `/files/_example.pdf`;
+      const filledPDF = new FilledPDF();
+      filledPDF.filename = '_example.pdf';
+      filledPDF.link = link;
+      filledPDF.pdfData = pdfData;
+      await this.filledPDFRepository.save(filledPDF);
 
-      // // Copy the pages from the updated PDF to the existing PDF
-      // const pages = await existingPDF.copyPages(updatedPDF, updatedPDF.getPageIndices());
-      // pages.forEach(page => existingPDF.addPage(page));
-
-      // // Save the updated PDF to the file path, overwriting the existing file
-      const modifiedPDFBytes = await updatedPDF.save();
-      await writeFile(filePath, modifiedPDFBytes);
-      // Write the uploaded file to the file path, overwriting the existing file
-      // fs.writeFileSync(filePath, pdfFile.buffer);
-
-      // const pdfData = pdfFile.buffer;
-
-      // const link = `/files/${filename}`;
-      // const filledPDF = new FilledPDF();
-      // filledPDF.filename = filename;
-      // filledPDF.link = link;
-      // filledPDF.pdfData = pdfData;
-      // await this.filledPDFRepository.save(filledPDF);
-    
-      res.status(200).send('PDF saved successfully');
-
-
+      return 'PDF saved successfully';
     } catch (error) {
-      console.error('Error uploading file:', error);
-      throw new Error('Failed to upload file');
-    }
+      console.error('Error saving file:', error);
+      throw new Error('Failed to save file');
+    } 
   }
 
 }
