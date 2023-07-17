@@ -6,11 +6,7 @@ import { FilledPDF } from './file.entity';
 import { Response } from 'express';
 import * as fs from 'fs';
 import { writeFile } from 'fs/promises';
-import { extname } from 'path';
-import { diskStorage } from 'multer';
-import { PDFDocument } from 'pdf-lib';
 import * as path from 'path';
-
 
 @Controller('files')
 export class FileController {
@@ -37,15 +33,15 @@ export class FileController {
   async saveFile(@Body() requestBody: { pdfData: number[] }) {
     const uint8Array = new Uint8Array(requestBody.pdfData); // Convert array back to Uint8Array
     try {
-      const filePath = `files/_example.pdf`; // Provide the correct file path
+      const filePath = `files/example.pdf`;
 
       await writeFile(filePath, uint8Array); // Save the Uint8Array to the file path
 
       const pdfData = requestBody.pdfData;
 
-      const link = `/files/_example.pdf`;
+      const link = `/files/example.pdf`;
       const filledPDF = new FilledPDF();
-      filledPDF.filename = '_example.pdf';
+      filledPDF.filename = 'example.pdf';
       filledPDF.link = link;
       filledPDF.pdfData = pdfData;
       await this.filledPDFRepository.save(filledPDF);
