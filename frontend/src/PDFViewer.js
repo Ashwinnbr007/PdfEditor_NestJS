@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Document, Page } from 'react-pdf';
 
 const PDFViewer = () => {
   const domain = process.env.REACT_APP_API_URL;
-  const url = `${domain}/_example.pdf`;
+  const url = `${domain}/example.pdf`;
   let blob = null
   const [pdfBlob, setPdfBlob] = useState(null);
   const [pdfView, setPdfView] = useState(null);
